@@ -133,6 +133,40 @@ where
     }
 }
 
+macro_rules! const_try_conv {
+    ($Dim:expr, $Kernel:expr, $Stride:expr, $Padding:expr, $Dilation:expr, out=$Out_dim:expr) => {
+        #[cfg(not(feature = "nightly"))]
+        impl<Groups: Dim> TryConv1D<Const<$Stride>, Const<$Padding>, Const<$Dilation>, Groups>
+            for (Const<$Dim>, Const<$Kernel>)
+        {
+            // ($Dim + 2 * $Padding - $Dilation * ($Kernel - 1) - 1) / $Stride + 1
+            //   def compute_output_size(dim, kernel_size, stride, padding, dilation):
+            //    output_size = int(int(dim + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1)
+            //    return output_size
+            type Convolved = Const<$Out_dim>;
+
+            fn try_conv1d(
+                self,
+                _: Const<$Stride>,
+                _: Const<$Padding>,
+                _: Const<$Dilation>,
+                _: Groups,
+            ) -> Result<Self::Convolved, Error> {
+                Ok(Const)
+            }
+        }
+    };
+}
+
+const_try_conv!(1, 2, 1, 0, 1, out = 0);
+const_try_conv!(1, 2, 1, 2, 1, out = 4);
+const_try_conv!(2, 2, 1, 0, 1, out = 1);
+const_try_conv!(3, 3, 1, 0, 1, out = 1);
+const_try_conv!(3, 3, 1, 1, 1, out = 3);
+const_try_conv!(5, 2, 2, 1, 2, out = 3);
+
+const_try_conv!(28, 6, 3, 2, 1, out = 9); // needed for a test
+
 impl<Kernel: Dim, Stride: Dim, Padding: Dim, Dilation: Dim, Groups: Dim>
     TryConv1D<Stride, Padding, Dilation, Groups> for (usize, Kernel)
 {

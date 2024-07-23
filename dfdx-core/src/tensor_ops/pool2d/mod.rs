@@ -77,6 +77,7 @@ pub trait TryPool2D<Kernel, Stride, Padding, Dilation>: Sized {
     ) -> Result<Self::Pooled, Error>;
 }
 
+#[cfg(feature = "nightly")]
 impl<
         const KERNEL: usize,
         const STRIDE: usize,
@@ -99,6 +100,50 @@ where
         Ok(Const)
     }
 }
+
+macro_rules! const_try_pool {
+    ($Dim:expr, $Kernel:expr, $Stride:expr, $Padding:expr, $Dilation:expr, out=$Out_dim:expr) => {
+        #[cfg(not(feature = "nightly"))]
+        impl TryPool2D<Const<$Kernel>, Const<$Stride>, Const<$Padding>, Const<$Dilation>>
+            for Const<$Dim>
+        {
+            // ($Dim + 2 * $Padding - $Dilation * ($Kernel - 1) - 1) / $Stride + 1
+            //   def compute_output_size(dim, kernel_size, stride, padding, dilation):
+            //    output_size = int(int(dim + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1)
+            //    return output_size
+            type Pooled = Const<$Out_dim>;
+
+            fn try_pool2d(
+                self,
+                _: Pool2DKind,
+                _: Const<$Kernel>,
+                _: Const<$Stride>,
+                _: Const<$Padding>,
+                _: Const<$Dilation>,
+            ) -> Result<Self::Pooled, Error> {
+                Ok(Const)
+            }
+        }
+    };
+}
+
+const_try_pool!(1, 2, 1, 0, 1, out = 0);
+const_try_pool!(2, 2, 1, 0, 1, out = 1);
+const_try_pool!(3, 2, 1, 0, 1, out = 2);
+const_try_pool!(4, 2, 1, 0, 1, out = 3);
+
+const_try_pool!(1, 2, 2, 0, 1, out = 0);
+const_try_pool!(2, 2, 2, 0, 1, out = 1);
+const_try_pool!(3, 2, 2, 0, 1, out = 1);
+const_try_pool!(4, 2, 2, 0, 1, out = 2);
+
+const_try_pool!(1, 1, 2, 0, 1, out = 1);
+const_try_pool!(2, 1, 2, 0, 1, out = 1);
+const_try_pool!(3, 1, 2, 0, 1, out = 2);
+const_try_pool!(4, 1, 2, 0, 1, out = 2);
+
+const_try_pool!(4, 2, 1, 0, 2, out = 2);
+const_try_pool!(5, 2, 1, 0, 2, out = 3);
 
 impl<Kernel: Dim, Stride: Dim, Padding: Dim, Dilation: Dim>
     TryPool2D<Kernel, Stride, Padding, Dilation> for usize

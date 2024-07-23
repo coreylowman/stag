@@ -284,9 +284,7 @@ pub use var_to::VarTo;
 mod conv1d;
 pub use conv1d::TryConv1D;
 
-#[cfg(feature = "nightly")]
 mod conv2d;
-#[cfg(feature = "nightly")]
 pub use conv2d::TryConv2D;
 
 #[cfg(feature = "nightly")]
@@ -294,7 +292,5 @@ mod convtrans2d;
 #[cfg(feature = "nightly")]
 pub use convtrans2d::TryConvTrans2D;
 
-#[cfg(feature = "nightly")]
 mod pool2d;
-#[cfg(feature = "nightly")]
 pub use pool2d::{Pool2DKind, TryPool2D};

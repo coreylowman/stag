@@ -117,6 +117,81 @@ where
     }
 }
 
+macro_rules! add_impl {
+    ($X1:expr, $X2:expr, $Y:expr) => {
+        #[cfg(not(feature = "nightly"))]
+        impl core::ops::Add<Const<$X2>> for Const<$X1> {
+            type Output = Const<$Y>;
+            fn add(self, _: Const<$X2>) -> Self::Output {
+                Const
+            }
+        }
+    };
+}
+
+macro_rules! add_impl_2 {
+    ($X1:expr, $X2:expr, $Y:expr) => {
+        add_impl!($X1, $X2, $Y);
+        add_impl!($X2, $X1, $Y);
+    };
+}
+
+add_impl!(1, 1, 2);
+add_impl!(2, 2, 4);
+add_impl!(3, 3, 6);
+add_impl_2!(1, 2, 3);
+add_impl_2!(1, 3, 4);
+add_impl_2!(1, 4, 5);
+add_impl_2!(1, 5, 6);
+add_impl_2!(1, 6, 7);
+add_impl_2!(2, 3, 5);
+add_impl_2!(2, 4, 6);
+add_impl_2!(2, 5, 7);
+add_impl_2!(2, 6, 8);
+
+macro_rules! mul_div_impl {
+    ($X1:expr, $X2:expr, $Y:expr) => {
+        #[cfg(not(feature = "nightly"))]
+        impl core::ops::Mul<Const<$X2>> for Const<$X1> {
+            type Output = Const<$Y>;
+            fn mul(self, _: Const<$X2>) -> Self::Output {
+                Const
+            }
+        }
+
+        #[cfg(not(feature = "nightly"))]
+        impl core::ops::Div<Const<$X2>> for Const<$Y> {
+            type Output = Const<$X1>;
+            fn div(self, _: Const<$X2>) -> Self::Output {
+                Const
+            }
+        }
+    };
+}
+
+macro_rules! mul_div_impl_2 {
+    ($X1:expr, $X2:expr, $Y:expr) => {
+        mul_div_impl!($X1, $X2, $Y);
+        mul_div_impl!($X2, $X1, $Y);
+    };
+}
+
+mul_div_impl!(1, 1, 1);
+mul_div_impl!(2, 2, 4);
+mul_div_impl!(3, 3, 9);
+mul_div_impl!(4, 4, 16);
+mul_div_impl!(5, 5, 25);
+mul_div_impl_2!(1, 2, 2);
+mul_div_impl_2!(1, 3, 3);
+mul_div_impl_2!(2, 3, 6);
+mul_div_impl_2!(1, 4, 4);
+mul_div_impl_2!(2, 4, 8);
+mul_div_impl_2!(3, 4, 12);
+mul_div_impl_2!(1, 5, 5);
+mul_div_impl_2!(2, 5, 10);
+mul_div_impl_2!(3, 5, 15);
+mul_div_impl_2!(4, 5, 20);
+
 /// Represents either `[T; N]` or `Vec<T>`
 pub trait Array<T>: IntoIterator<Item = T> {
     type Dim: Dim;
